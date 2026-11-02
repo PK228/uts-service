@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UTS Service | Locks, Access Control and Automatic Doors in the GTA</title>
+<meta name="description" content="Locksmith, access control, door repair and automatic doors for apartment buildings and businesses across the GTA. One team for every entrance.">
+<meta name="theme-color" content="#0F1626">
+<!-- DEPLOY STEP: replace https://SITE_URL with the live absolute URL -->
+<meta property="og:title" content="UTS Service | Every entrance. Handled.">
+<meta property="og:description" content="Locks, access control and automatic doors for the buildings Ontario walks into every day.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://SITE_URL/">
+<meta property="og:image" content="https://SITE_URL/assets/hero-ending.jpg">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230F1626'/%3E%3Crect x='14' y='12' width='16' height='40' rx='2' fill='none' stroke='%23EEF2F9' stroke-width='3'/%3E%3Crect x='34' y='12' width='16' height='40' rx='2' fill='none' stroke='%23EEF2F9' stroke-width='3'/%3E%3Ccircle cx='46' cy='32' r='3' fill='%234FA6FF'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,300;125,600&family=Hanken+Grotesk:wght@400;500&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#0F1626;--panel:#18223A;
+  --glass:rgba(214,226,255,.06);--glass-edge:rgba(214,226,255,.18);--glass-edge-strong:rgba(214,226,255,.42);
+  --accent:#4FA6FF;--accent-hover:#7DBDFF;--accent-muted:rgba(79,166,255,.22);
+  --warm:#C38E61;
+  --text-secondary:#A3AFC6;--text-primary:#EEF2F9;
+  --ease-out:cubic-bezier(.16,1,.3,1);--ease-io:cubic-bezier(.65,0,.35,1);
+  --display:"Archivo",system-ui,sans-serif;--body:"Hanken Grotesk",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace;
+  --tshadow:0 1px 2px rgba(5,5,10,.95),0 3px 12px rgba(5,5,10,.78),0 10px 44px rgba(5,5,10,.8);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow-x:hidden;overflow-x:clip}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{background:var(--canvas);color:var(--text-primary);font-family:var(--body);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;animation:pagein .9s var(--ease-out) both}
+@keyframes pagein{from{opacity:0}to{opacity:1}}
+img{display:block;max-width:100%}
+a{color:inherit}
+.skip{position:absolute;left:12px;top:-60px;z-index:100;background:var(--accent);color:#06101F;padding:10px 16px;border-radius:10px;font-weight:500;transition:top .3s var(--ease-out)}
+.skip:focus{top:12px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.mono{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase}
+.visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.wrap{width:min(1200px,calc(100% - 48px));margin:0 auto}
+
+/* fixed environment layer */
+.env{position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(60% 50% at 20% 10%,rgba(79,166,255,.10),transparent 70%),radial-gradient(50% 45% at 85% 90%,rgba(195,142,97,.08),transparent 70%),var(--canvas)}
+.env::before{content:"";position:absolute;inset:-20%;background:linear-gradient(115deg,transparent 42%,rgba(214,226,255,.045) 50%,transparent 58%);animation:sweep 70s linear infinite;animation-delay:-23s}
+.env::after{content:"";position:absolute;inset:0;opacity:.35;background-image:radial-gradient(rgba(214,226,255,.5) 1px,transparent 1.2px);background-size:180px 180px;animation:dust 90s linear infinite;animation-delay:-40s}
+@keyframes sweep{from{transform:translateX(-30%)}to{transform:translateX(30%)}}
+@keyframes dust{from{transform:translateY(0)}to{transform:translateY(-180px)}}
+
+/* nav */
+.nav{position:fixed;top:0;left:0;right:0;z-index:50;transition:background .5s var(--ease-out),border-color .5s var(--ease-out)}
+.nav.solid{background:rgba(15,22,38,.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--glass-edge)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:72px;gap:24px}
+.nav .logo img{height:38px;width:auto}
+.nav ul{display:flex;gap:28px;list-style:none;align-items:baseline}
+.nav ul a{text-decoration:none;font-size:15px;color:var(--text-secondary);transition:color .3s var(--ease-out)}
+.nav ul a:hover{color:var(--text-primary)}
+.nav .call{display:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;font-family:var(--body);font-weight:500;font-size:15.5px;padding:13px 22px;border-radius:999px;border:1px solid transparent;cursor:pointer;text-shadow:none;transition:background .35s var(--ease-out),color .35s var(--ease-out),border-color .35s var(--ease-out),transform .35s var(--ease-out),box-shadow .35s var(--ease-out)}
+.btn-primary{background:var(--accent);color:#06101F;box-shadow:0 0 0 0 var(--accent-muted)}
+.btn-primary:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 8px 30px var(--accent-muted)}
+.btn-glass{background:rgba(214,226,255,.08);color:var(--text-primary);border-color:var(--glass-edge-strong);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.btn-glass:hover{background:rgba(214,226,255,.16);transform:translateY(-1px)}
+.btn-sm{padding:10px 18px;font-size:14.5px}
+@media (pointer:coarse){.btn{min-height:44px}}
+
+/* hero */
+#hero{position:relative;height:520vh}
+.stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:var(--canvas)}
+.poster,.stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background-size:cover;background-position:center}
+.stage video{opacity:0;transition:opacity .8s var(--ease-out);transform:translateZ(0);will-change:transform}
+.stage.video-ready video{opacity:1}
+.scrim{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(8,12,22,.55) 0%,rgba(8,12,22,.18) 42%,rgba(8,12,22,0) 60%),radial-gradient(ellipse 120% 90% at 50% 45%,rgba(10,10,18,0) 35%,rgba(10,10,18,.62) 100%),linear-gradient(180deg,rgba(8,12,22,.55) 0%,transparent 18%,transparent 78%,rgba(15,22,38,.9) 100%)}
+.bands{position:absolute;inset:0;pointer-events:none}
+.band{position:absolute;left:max(24px,6vw);top:50%;transform:translateY(-46%);width:min(560px,40vw);opacity:0;text-shadow:var(--tshadow)}
+.band.live{pointer-events:auto}
+.band::before{content:"";position:absolute;inset:-34% -40% -34% -30%;z-index:-1;pointer-events:none;opacity:calc(.25 + .75*var(--k,1));background:radial-gradient(ellipse 60% 56% at 42% 50%,rgba(5,5,10,.68) 0%,rgba(5,5,10,.44) 46%,rgba(5,5,10,0) 76%)}
+.band .kicker{color:var(--accent);margin-bottom:18px;opacity:calc(.2 + .8*var(--k,0))}
+.band h1,.band h2{font-family:var(--display);font-stretch:125%;font-weight:600;font-size:clamp(34px,4.6vw,68px);line-height:1.02;letter-spacing:-.01em;max-width:13ch}
+.band .sub{margin-top:22px;font-size:clamp(16px,1.35vw,19px);color:#DCE3F0;max-width:38ch}
+.split .w{display:inline-block;white-space:nowrap}
+.split .c{display:inline-block}
+/* band 1: approach from depth */
+.b1 .w{--kc:clamp(0,(var(--k,0) - var(--th,0))*2.6,1);opacity:var(--kc);transform:scale(calc(.82 + .18*var(--kc))) translateY(calc((1 - var(--kc))*14px));transform-origin:0 70%}
+.b1 .sub{opacity:clamp(0,(var(--k,0) - .45)*2.4,1);transform:translateY(calc((1 - clamp(0,(var(--k,0) - .45)*2.4,1))*10px))}
+/* band 2: blur to sharp */
+.b2 .stack{position:relative}
+.b2 .soft{position:absolute;inset:0;filter:blur(10px);opacity:calc(1 - var(--k,0))}
+.b2 .sharp{opacity:var(--k,0)}
+.b2 .sub{opacity:clamp(0,(var(--k,0) - .5)*2.4,1)}
+/* band 3: doors parting, staged settle */
+.b3 .w{--kc:clamp(0,(var(--k,0) - var(--th,0))*3,1);opacity:var(--kc);transform:translateX(calc((1 - var(--kc))*var(--jx,0px)))}
+.b3 .sub{--ks:clamp(0,(var(--k,0) - .62)*4,1);opacity:var(--ks);transform:translateY(calc((1 - var(--ks))*10px))}
+.b3 .ctas{--kb:clamp(0,(var(--k,0) - .76)*5,1);opacity:var(--kb);transform:translateY(calc((1 - var(--kb))*12px));display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
+.chip{position:absolute;right:max(24px,5vw);bottom:9vh;display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(8,8,15,.55);border:1px solid rgba(96,96,126,.3);border-radius:10px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);text-shadow:0 1px 3px rgba(5,5,10,.85);color:var(--text-secondary);transition:color .5s var(--ease-out)}
+.chip i{width:8px;height:8px;border-radius:50%;background:#E9EEF7;box-shadow:0 0 0 3px rgba(233,238,247,.15);transition:background .5s var(--ease-out),box-shadow .5s var(--ease-out)}
+.chip.on{color:var(--text-primary)}
+.chip.on i{background:var(--accent);box-shadow:0 0 0 3px var(--accent-muted),0 0 14px var(--accent)}
+.loader{position:absolute;left:50%;bottom:6vh;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--text-secondary);transition:opacity .6s var(--ease-out)}
+.ring{width:44px;height:44px;color:var(--accent);transform:rotate(-90deg)}
+.ring circle{transition:stroke-dashoffset .2s linear}
+.ring .track{stroke:rgba(214,226,255,.15)}
+.stage.video-ready .loader .ring,.stage.video-ready .loader .lbl{display:none}
+.cue{width:22px;height:34px;border:1.5px solid var(--glass-edge-strong);border-radius:12px;position:relative;display:none}
+.cue::after{content:"";position:absolute;left:50%;top:7px;width:3px;height:7px;margin-left:-1.5px;border-radius:2px;background:var(--text-primary);animation:cue 2.2s var(--ease-io) infinite;animation-delay:-.6s}
+@keyframes cue{0%{transform:translateY(0);opacity:1}70%{transform:translateY(10px);opacity:0}100%{opacity:0}}
+.stage.video-ready .cue,.stage.video-failed .cue{display:block}
+.stage.video-failed .ring,.stage.video-failed .lbl{display:none}
+.stage.video-failed video{display:none}
+.static-hero{display:none}
+
+/* static hero gates (must match JS GATES exactly) */
+@media (max-width: 720px),(orientation: portrait) and (max-width: 1024px),(orientation: portrait) and (pointer: coarse),(orientation: landscape) and (pointer: coarse) and (max-height: 560px),(prefers-reduced-motion: reduce){
+  #hero{height:auto}
+  .stage{position:relative;height:100svh;min-height:560px;background:url(assets/hero-ending.jpg) 50% 50%/cover no-repeat}
+  .stage video,.bands,.loader,.chip,.poster{display:none!important}
+  .scrim{background:linear-gradient(180deg,rgba(8,12,22,.55) 0%,rgba(8,12,22,.25) 35%,rgba(8,12,22,.85) 78%,var(--canvas) 100%)}
+  .static-hero{display:block;position:absolute;left:24px;right:24px;bottom:9svh;text-shadow:var(--tshadow)}
+  .static-hero h1{font-family:var(--display);font-stretch:125%;font-weight:600;font-size:clamp(34px,9vw,54px);line-height:1.02}
+  .static-hero p{margin:16px 0 26px;color:#DCE3F0;max-width:34ch}
+  .static-hero .ctas{display:flex;gap:10px;flex-wrap:wrap}
+}
+@media (max-height:560px){.chip{display:none}}
+
+/* sections */
+section{position:relative}
+.sec{padding:clamp(96px,13vw,170px) 0}
+.kick{color:var(--accent);margin-bottom:18px;display:flex;align-items:center;gap:14px}
+.kick svg{width:34px;height:20px;overflow:visible}
+.kick path{fill:none;stroke:var(--accent);stroke-width:1.5;stroke-dasharray:120;stroke-dashoffset:120;transition:stroke-dashoffset 1.6s var(--ease-out) .1s}
+.in .kick path,.kick.in path{stroke-dashoffset:0}
+h2.h{font-family:var(--display);font-stretch:125%;font-weight:600;font-size:clamp(32px,4.2vw,58px);line-height:1.04;letter-spacing:-.01em;max-width:18ch}
+.lede{color:var(--text-secondary);font-size:clamp(17px,1.4vw,20px);max-width:56ch;margin-top:20px}
+.reveal{opacity:0;transform:translateY(26px);transition:opacity 1s var(--ease-out),transform 1s var(--ease-out)}
+.in .reveal,.reveal.in{opacity:1;transform:none}
+.in .reveal:nth-child(2){transition-delay:.08s}.in .reveal:nth-child(3){transition-delay:.16s}.in .reveal:nth-child(4){transition-delay:.24s}
+
+/* glass door panes: the signature */
+.doors{position:absolute;inset:0;z-index:5;pointer-events:none;display:flex}
+.doors .pane{flex:1;height:100%;background:linear-gradient(180deg,rgba(214,226,255,.13),rgba(214,226,255,.05));backdrop-filter:blur(22px) saturate(1.2);-webkit-backdrop-filter:blur(22px) saturate(1.2);border:1px solid var(--glass-edge);transition:transform 1.5s var(--ease-io) .15s}
+.doors .pane.l{border-right-color:var(--glass-edge-strong);box-shadow:inset -1px 0 0 rgba(255,255,255,.12)}
+.doors .pane.r{border-left-color:var(--glass-edge-strong)}
+.doors .pane.l::after,.doors .pane.r::after{content:"";position:absolute;top:50%;width:3px;height:64px;margin-top:-32px;border-radius:3px;background:rgba(214,226,255,.45)}
+.doors .pane{position:relative}
+.doors .pane.l::after{right:18px}.doors .pane.r::after{left:18px}
+.open > .doors .pane.l{transform:translateX(-101%)}
+.open > .doors .pane.r{transform:translateX(101%)}
+.doors.gone{display:none}
+
+/* clients */
+#clients{overflow:hidden}
+.marquee{margin-top:64px;display:grid;gap:26px;mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.track{display:flex;gap:28px;width:max-content;animation:mq 60s linear infinite}
+.track.rev{animation-direction:reverse;animation-duration:72s;animation-delay:-20s}
+.track img{height:56px;width:auto;max-width:190px;object-fit:contain;opacity:.62;filter:brightness(1.4);transition:opacity .4s var(--ease-out)}
+.logo-cell{display:flex;align-items:center;justify-content:center;height:96px;padding:0 34px;border:1px solid var(--glass-edge);border-radius:18px;background:var(--glass)}
+.logo-cell:hover img{opacity:1}
+@keyframes mq{to{transform:translateX(-50%)}}
+.anim-off .track{animation-play-state:paused}
+
+/* who we serve */
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:64px}
+.card{position:relative;padding:30px 26px 32px;border-radius:22px;background:linear-gradient(180deg,rgba(214,226,255,.075),rgba(214,226,255,.025));border:1px solid var(--glass-edge);overflow:hidden;transition:border-color .4s var(--ease-out),transform .5s var(--ease-out)}
+.card::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(214,226,255,.08) 50%,transparent 65%);transform:translateX(-120%);transition:transform 1.2s var(--ease-out)}
+.card:hover{border-color:var(--glass-edge-strong);transform:translateY(-4px)}
+.card:hover::after{transform:translateX(120%)}
+.card .ix{color:var(--text-secondary)}
+.card h3{font-family:var(--display);font-stretch:125%;font-weight:600;font-size:21px;line-height:1.15;margin:44px 0 12px}
+.card p{color:var(--text-secondary);font-size:16px}
+.card svg{position:absolute;top:26px;right:24px;width:30px;height:30px;stroke:var(--accent);fill:none;stroke-width:1.5}
+
+/* program */
+#program .wrap{display:grid;grid-template-columns:1fr 1fr;gap:clamp(40px,6vw,90px);align-items:center}
+.fob-zone{position:relative;border-radius:28px;border:1px solid var(--glass-edge);background:radial-gradient(70% 60% at 50% 40%,rgba(79,166,255,.10),transparent 70%),linear-gradient(180deg,#141D31,#10182A);padding:44px 34px 34px;overflow:hidden;min-height:520px;display:flex;flex-direction:column}
+.reader-wrap{display:flex;flex-direction:column;align-items:center;gap:18px}
+.reader{position:relative;width:132px;height:212px;border-radius:22px;background:linear-gradient(180deg,#1D2537,#121827);border:1px solid rgba(214,226,255,.16);box-shadow:0 30px 60px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;color:var(--text-primary)}
+.reader svg{position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-42px 0 0 -42px;transform:rotate(-90deg)}
+.reader .base{stroke:rgba(214,226,255,.18)}
+.reader .fill{stroke:var(--accent);stroke-dasharray:226;stroke-dashoffset:calc(226 - 226*var(--h,0));filter:drop-shadow(0 0 6px var(--accent))}
+.reader .dot{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:rgba(214,226,255,.55);transition:background .4s var(--ease-out),box-shadow .4s var(--ease-out)}
+.granted .reader .dot{background:var(--accent);box-shadow:0 0 18px var(--accent)}
+.fob{position:absolute;left:50%;bottom:-44px;width:54px;height:68px;margin-left:-27px;border-radius:16px 16px 22px 22px;background:linear-gradient(160deg,#2C3650,#161D2E);border:1px solid rgba(214,226,255,.22);transform:translateY(calc(-36px*var(--h,0)));transition:transform .2s linear}
+.fob::before{content:"";position:absolute;left:50%;top:9px;width:12px;height:12px;margin-left:-6px;border-radius:50%;border:2px solid rgba(214,226,255,.35)}
+.hold-label{color:var(--text-secondary);margin-top:52px;min-height:20px;text-align:center}
+.granted .hold-label{color:var(--accent)}
+.vault{position:relative;margin-top:28px;flex:1;border-radius:18px;overflow:hidden}
+.vault ul{list-style:none;display:grid;gap:12px}
+.vault li{padding:14px 16px;border-radius:14px;background:rgba(214,226,255,.05);border:1px solid var(--glass-edge);font-size:15.5px;opacity:0;transform:translateY(10px);transition:opacity .7s var(--ease-out),transform .7s var(--ease-out)}
+.vault li b{font-weight:500;color:var(--text-primary)}
+.vault li span{color:var(--text-secondary)}
+.granted .vault li{opacity:1;transform:none}
+.granted .vault li:nth-child(2){transition-delay:.12s}.granted .vault li:nth-child(3){transition-delay:.24s}.granted .vault li:nth-child(4){transition-delay:.36s}
+.vault .doors .pane{transition-duration:1.1s;transition-delay:0s}
+.granted .vault .doors .pane.l{transform:translateX(-101%)}
+.granted .vault .doors .pane.r{transform:translateX(101%)}
+.prog-list{list-style:none;margin-top:34px;display:grid;gap:16px}
+.prog-list li{display:flex;gap:14px;align-items:baseline;color:var(--text-secondary)}
+.prog-list li::before{content:"";flex:0 0 8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent-muted);transform:translateY(-1px)}
+
+/* services */
+.svc{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-top:64px}
+.svc article{border-radius:24px;overflow:hidden;border:1px solid var(--glass-edge);background:var(--glass);transition:border-color .4s var(--ease-out)}
+.svc article:hover{border-color:var(--glass-edge-strong)}
+.svc figure{aspect-ratio:16/10;overflow:hidden}
+.svc figure img{width:100%;height:100%;object-fit:cover;transform:scale(1.06);transition:transform 1.6s var(--ease-out)}
+.svc article.in figure img{transform:scale(1)}
+.svc article:hover figure img{transform:scale(1.03)}
+.svc .txt{padding:26px 28px 30px}
+.svc h3{font-family:var(--display);font-stretch:125%;font-weight:600;font-size:24px;margin-bottom:8px}
+.svc p{color:var(--text-secondary)}
+
+/* emergency */
+#emergency{padding:0}
+.em{position:relative;border-radius:32px;margin:0 auto;width:min(1200px,calc(100% - 48px));padding:clamp(56px,7vw,96px) clamp(28px,6vw,80px);overflow:hidden;border:1px solid var(--glass-edge);background:linear-gradient(120deg,rgba(15,22,38,.92) 30%,rgba(15,22,38,.55)),url(assets/hero-poster.jpg) 60% 50%/cover}
+.em h2{font-family:var(--display);font-stretch:125%;font-weight:600;font-size:clamp(30px,4vw,54px);line-height:1.05;max-width:16ch}
+.em p:not(.kick){color:#C9D2E3;margin:18px 0 32px;max-width:44ch}
+.em .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.em .pulse{position:absolute;right:clamp(28px,8vw,120px);top:50%;width:150px;height:150px;margin-top:-75px;border-radius:50%;border:1.5px solid var(--accent);opacity:.0;animation:pulse 4.5s var(--ease-out) infinite;animation-delay:-1.5s}
+.em .pulse.p2{animation-delay:-3.75s}
+@keyframes pulse{0%{transform:scale(.4);opacity:.7}100%{transform:scale(1.6);opacity:0}}
+.big-call{font-family:var(--display);font-stretch:125%;font-weight:600;font-size:clamp(22px,2.4vw,30px);text-decoration:none;color:var(--text-primary);border-bottom:1px solid var(--accent-muted);transition:border-color .3s var(--ease-out)}
+.big-call:hover{border-color:var(--accent)}
+
+/* coverage */
+.cov{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(40px,6vw,90px);align-items:center}
+.cities{display:flex;flex-wrap:wrap;gap:10px;margin-top:34px}
+.cities li{list-style:none;padding:9px 16px;border-radius:999px;border:1px solid var(--glass-edge);background:var(--glass);font-size:15px;color:#D5DCEA}
+.map{width:100%;aspect-ratio:1/1;max-width:500px;justify-self:center}
+.map .ln{fill:none;stroke:rgba(214,226,255,.22);stroke-width:1}
+.map .rd{fill:none;stroke:var(--accent);stroke-width:1.4;stroke-dasharray:900;stroke-dashoffset:900;transition:stroke-dashoffset 2.6s var(--ease-out) .2s;opacity:.7}
+.map.in .rd{stroke-dashoffset:0}
+.map circle.pt{fill:var(--text-primary)}
+.map circle.hq{fill:var(--accent)}
+.map .halo{fill:none;stroke:var(--accent);animation:halo 4s var(--ease-out) infinite;animation-delay:-1s;transform-origin:center;transform-box:fill-box}
+@keyframes halo{0%{transform:scale(.6);opacity:.8}100%{transform:scale(2.6);opacity:0}}
+.map text{font-family:var(--mono);font-size:10px;letter-spacing:.12em;fill:var(--text-secondary)}
+
+/* faq */
+.faq{margin-top:56px;display:grid;gap:12px;max-width:860px}
+.faq details{border:1px solid var(--glass-edge);border-radius:18px;background:var(--glass);transition:border-color .4s var(--ease-out),background .4s var(--ease-out)}
+.faq details[open]{border-color:var(--glass-edge-strong);background:rgba(214,226,255,.08)}
+.faq summary{list-style:none;cursor:pointer;padding:22px 26px;display:flex;justify-content:space-between;align-items:baseline;gap:20px;font-family:var(--display);font-stretch:125%;font-weight:600;font-size:18px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-family:var(--mono);color:var(--accent);font-size:20px;transition:transform .4s var(--ease-out)}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq p{padding:0 26px 24px;color:var(--text-secondary);max-width:64ch}
+
+/* cta */
+#request .box{position:relative;border-radius:32px;overflow:hidden;border:1px solid var(--glass-edge);min-height:520px;display:flex;align-items:center;background:linear-gradient(90deg,rgba(15,22,38,.94) 0%,rgba(15,22,38,.7) 48%,rgba(15,22,38,.15) 100%),url(assets/hero-ending.jpg) 70% 50%/cover}
+#request .inner{padding:clamp(40px,6vw,88px);position:relative;z-index:2}
+#request h2{font-family:var(--display);font-stretch:125%;font-weight:600;font-size:clamp(34px,4.6vw,64px);line-height:1.02;max-width:12ch}
+#request p:not(.kick){color:#C9D2E3;margin:20px 0 34px;max-width:40ch;font-size:18px}
+#request .row{display:flex;gap:12px;flex-wrap:wrap}
+
+footer{padding:90px 0 60px;color:var(--text-secondary);font-size:15px}
+footer .wrap{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px;border-top:1px solid var(--glass-edge);padding-top:56px}
+footer img{height:44px;width:auto;margin-bottom:18px}
+footer h4{font-family:var(--mono);font-weight:400;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-primary);margin-bottom:14px}
+footer ul{list-style:none;display:grid;gap:8px}
+footer a{text-decoration:none;transition:color .3s var(--ease-out)}
+footer a:hover{color:var(--text-primary)}
+.legal{grid-column:1/-1;font-size:13px;opacity:.75;margin-top:30px}
+
+.sticky-call{display:none}
+@media (max-width:1000px){
+  .grid4{grid-template-columns:repeat(2,1fr)}
+  #program .wrap,.cov{grid-template-columns:1fr}
+  .nav ul{display:none}
+}
+@media (max-width:720px){
+  .grid4,.svc{grid-template-columns:1fr}
+  footer .wrap{grid-template-columns:1fr}
+  .nav .cta-top{display:none}
+  .nav .call{display:inline-flex}
+  .sticky-call{display:flex;position:fixed;left:12px;right:12px;bottom:12px;z-index:60;gap:10px;opacity:0;transform:translateY(16px);pointer-events:none;transition:opacity .4s var(--ease-out),transform .4s var(--ease-out)}
+  .sticky-call.show{opacity:1;transform:none;pointer-events:auto}
+  .sticky-call a{flex:1}
+  footer{padding-bottom:110px}
+  .em .pulse{display:none}
+}
+.paused *,.paused *::before,.paused *::after{animation-play-state:paused!important}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;transition-delay:0s!important}
+  .reveal{opacity:1;transform:none}
+  .kick path,.map .rd{stroke-dashoffset:0}
+  .doors{display:none}
+  .vault li{opacity:1;transform:none}
+  .svc figure img{transform:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="env" aria-hidden="true"></div>
+
+<nav class="nav" aria-label="Main">
+  <div class="wrap">
+    <a class="logo" href="#hero" aria-label="UTS Service home"><img src="assets/uts-logo.png" alt="UTS Service" width="444" height="160"></a>
+    <ul>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#program">Buildings</a></li>
+      <li><a href="#clients">Clients</a></li>
+      <li><a href="#coverage">Coverage</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <a class="btn btn-primary btn-sm cta-top" href="https://clienthub.getjobber.com/client_hubs/6c2a5043-8d20-4ca8-a7c5-82753914a5b7/public/work_request/new?source=social_media" target="_blank" rel="noopener">Request service</a>
+    <a class="btn btn-glass btn-sm call" href="tel:+16477777411">Call</a>
+  </div>
+</nav>
+
+<header id="hero">
+  <div class="stage" id="stage">
+    <div class="poster" id="poster" aria-hidden="true"></div>
+    <video id="hero-video" preload="none" muted playsinline aria-hidden="true" tabindex="-1"></video>
+    <div class="scrim" aria-hidden="true"></div>
+
+    <div class="bands" id="bands">
+      <div class="band b1" data-a="0" data-b="0.31">
+        <p class="kicker mono">Locksmith · Access control · Doors</p>
+        <h1 class="split" data-fx="depth">Every entrance. Handled.</h1>
+        <p class="sub">Locks, access control and automatic doors for the buildings Ontario walks into every day.</p>
+      </div>
+      <div class="band b2" data-a="0.36" data-b="0.65">
+        <p class="kicker mono">Access control</p>
+        <h2 class="stack"><span class="soft" aria-hidden="true">Know exactly who gets in.</span><span class="sharp">Know exactly who gets in.</span></h2>
+        <p class="sub">Fobs added, cancelled and tracked the same day. No more guessing who still has a key.</p>
+      </div>
+      <div class="band b3" data-a="0.70" data-b="1">
+        <p class="kicker mono">One team</p>
+        <h2 class="split" data-fx="part">Doors that just work.</h2>
+        <p class="sub">One team for every lock, reader and door in your building.</p>
+        <div class="ctas">
+          <a class="btn btn-primary" href="https://clienthub.getjobber.com/client_hubs/6c2a5043-8d20-4ca8-a7c5-82753914a5b7/public/work_request/new?source=social_media" target="_blank" rel="noopener">Request service</a>
+          <a class="btn btn-glass" href="#request">Book a walkthrough</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="chip mono" id="chip" aria-hidden="true"><i></i><span id="chip-txt">Entrance 01 · Standby</span></div>
+
+    <div class="loader" aria-hidden="true">
+      <svg class="ring" viewBox="0 0 48 48"><circle class="track" cx="24" cy="24" r="20" fill="none" stroke-width="3"/><circle id="ring-fill" cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="126" style="stroke-dashoffset:var(--ld,126)"/></svg>
+      <span class="lbl mono">Loading</span>
+      <span class="cue"></span>
+    </div>
+
+    <div class="static-hero">
+      <h1>Every entrance. Handled.</h1>
+      <p>Locks, access control and automatic doors for apartment buildings and businesses across the GTA.</p>
+      <div class="ctas">
+        <a class="btn btn-primary" href="https://clienthub.getjobber.com/client_hubs/6c2a5043-8d20-4ca8-a7c5-82753914a5b7/public/work_request/new?source=social_media" target="_blank" rel="noopener">Request service</a>
+        <a class="btn btn-glass" href="tel:+16477777411">Call 647-777-7411</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main id="main" tabindex="-1">
+
+<section id="clients" class="sec doorway">
+  <div class="doors" aria-hidden="true"><div class="pane l"></div><div class="pane r"></div></div>
+  <div class="wrap">
+    <p class="kick mono reveal"><svg viewBox="0 0 34 20" aria-hidden="true"><path d="M1 19V1h14v18M19 19V1h14v18"/></svg>Trusted at the door</p>
+    <h2 class="h reveal">You've walked through our work.</h2>
+    <p class="lede reveal">Banks, flagship retail, city buildings and the coffee shop on the corner. Their doors open and lock because of us.</p>
+  </div>
+  <div class="marquee" aria-label="Some of the brands UTS has worked for">
+    <div class="track" id="trackA"></div>
+    <div class="track rev" id="trackB"></div>
+  </div>
+</section>
+
+<section id="serve" class="sec">
+  <div class="wrap">
+    <p class="kick mono reveal"><svg viewBox="0 0 34 20" aria-hidden="true"><path d="M1 19V1h14v18M19 19V1h14v18"/></svg>Who we serve</p>
+    <h2 class="h reveal">Built for buildings, not one-off calls.</h2>
+    <div class="grid4">
+      <article class="card reveal"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M5 27V8l10-5 10 5v19M11 27v-6h8v6M11 12h2M17 12h2M11 16h2M17 16h2"/></svg><span class="ix mono">01</span><h3>Apartments and condos</h3><p>Fobs, intercoms, lobby doors, garage gates and move-out rekeys, handled for your whole portfolio.</p></article>
+      <article class="card reveal"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M3 11l2-7h20l2 7M3 11h24M3 11c0 2 1.5 3 3 3s3-1 3-3c0 2 1.5 3 3 3s3-1 3-3c0 2 1.5 3 3 3s3-1 3-3c0 2 1.5 3 3 3s3-1 3-3M5 14v13h20V14M12 27v-7h6v7"/></svg><span class="ix mono">02</span><h3>Retail and franchise</h3><p>Same standard at every location. Storefront locks, panic bars and doors that open on time.</p></article>
+      <article class="card reveal"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M7 27V3h16v24M3 27h24M11 7h2M17 7h2M11 11h2M17 11h2M11 15h2M17 15h2M13 27v-6h4v6"/></svg><span class="ix mono">03</span><h3>Offices and corporate</h3><p>Card and fob access by floor, master key systems, and a record of who came in.</p></article>
+      <article class="card reveal"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M3 11L15 4l12 7M5 11v13M10 11v13M15 11v13M20 11v13M25 11v13M3 27h24M3 24h24"/></svg><span class="ix mono">04</span><h3>Public sector</h3><p>Code-compliant hardware and crews who know how to work in public buildings.</p></article>
+    </div>
+  </div>
+</section>
+
+<section id="program" class="sec doorway">
+  <div class="doors" aria-hidden="true"><div class="pane l"></div><div class="pane r"></div></div>
+  <div class="wrap">
+    <div>
+      <p class="kick mono reveal"><svg viewBox="0 0 34 20" aria-hidden="true"><path d="M1 19V1h14v18M19 19V1h14v18"/></svg>The Building Program</p>
+      <h2 class="h reveal">One call. Every door.</h2>
+      <p class="lede reveal">Most buildings juggle a locksmith, an access company and a door guy. Then nobody owns the problem. We take all of it.</p>
+      <ul class="prog-list reveal">
+        <li>Fob management: add, cancel and audit credentials the same day.</li>
+        <li>Master key systems: know who holds which key, and rekey when someone leaves.</li>
+        <li>Scheduled checks: closers, strikes, hinges and readers inspected before they fail.</li>
+        <li>Priority line: building emergencies go to the front of the queue.</li>
+      </ul>
+    </div>
+    <div class="fob-zone reveal" id="fobzone">
+      <div class="reader-wrap">
+        <button class="reader" id="reader" type="button" aria-label="Press and hold to grant access">
+          <svg viewBox="0 0 84 84" aria-hidden="true"><circle class="base" cx="42" cy="42" r="36" fill="none" stroke-width="3"/><circle class="fill" cx="42" cy="42" r="36" fill="none" stroke-width="3" stroke-linecap="round"/></svg>
+          <span class="dot" aria-hidden="true"></span>
+          <span class="fob" aria-hidden="true"></span>
+        </button>
+        <p class="hold-label mono" id="hold-label" aria-live="polite">Press and hold to grant access</p>
+      </div>
+      <div class="vault">
+        <div class="doors" aria-hidden="true"><div class="pane l"></div><div class="pane r"></div></div>
+        <ul>
+          <li><b>Lobby and garage</b> <span>· every resident fob active</span></li>
+          <li><b>Cleaners</b> <span>· weekdays, 6 to 9 p.m. only</span></li>
+          <li><b>Contractor</b> <span>· access ends Friday automatically</span></li>
+          <li><b>Lost fob, unit 1204</b> <span>· cancelled in minutes</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="services" class="sec">
+  <div class="wrap">
+    <p class="kick mono reveal"><svg viewBox="0 0 34 20" aria-hidden="true"><path d="M1 19V1h14v18M19 19V1h14v18"/></svg>Services</p>
+    <h2 class="h reveal">Four trades. One crew.</h2>
+    <div class="svc">
+      <article class="reveal"><figure><img src="assets/svc-locksmith.jpg" alt="Brushed steel lock and lever on a dark commercial door" loading="lazy" width="1600" height="1200"></figure><div class="txt"><h3>Locksmith</h3><p>Lockouts, rekeys, high-security cylinders and master key systems. Fixed right the first time.</p></div></article>
+      <article class="reveal"><figure><img src="assets/svc-access.jpg" alt="Wall-mounted access reader glowing blue in a lobby" loading="lazy" width="1600" height="1200"></figure><div class="txt"><h3>Access control</h3><p>Fob, card, keypad and biometric entry, set up so you control every door from one place.</p></div></article>
+      <article class="reveal"><figure><img src="assets/svc-repair.jpg" alt="Steel door closer and hinge on a glass entrance door" loading="lazy" width="1600" height="1200"></figure><div class="txt"><h3>Door repair</h3><p>Closers, hinges, strikes and frames that stop sticking, slamming and failing.</p></div></article>
+      <article class="reveal"><figure><img src="assets/svc-auto.jpg" alt="Automatic glass sliding doors opening onto a lit lobby" loading="lazy" width="1600" height="1200"></figure><div class="txt"><h3>Automatic doors</h3><p>Sliding and swing operators, accessible entrances and push-button openers installed and serviced.</p></div></article>
+    </div>
+  </div>
+</section>
+
+<section id="emergency">
+  <div class="em reveal">
+    <span class="pulse" aria-hidden="true"></span><span class="pulse p2" aria-hidden="true"></span>
+    <p class="kick mono"><svg viewBox="0 0 34 20" aria-hidden="true"><path d="M1 19V1h14v18M19 19V1h14v18"/></svg>Building emergencies</p>
+    <h2>Front door won't lock at 2 a.m.?</h2>
+    <p>Garage gate stuck. Lobby door wide open. Reader dead. Call and we're on the way.</p>
+    <div class="row">
+      <a class="btn btn-primary" href="tel:+16477777411">Call 647-777-7411</a>
+      <a class="big-call" href="tel:+16476764408">or 647-676-4408</a>
+    </div>
+  </div>
+</section>
+
+<section id="coverage" class="sec">
+  <div class="wrap cov">
+    <div>
+      <p class="kick mono reveal"><svg viewBox="0 0 34 20" aria-hidden="true"><path d="M1 19V1h14v18M19 19V1h14v18"/></svg>Coverage</p>
+      <h2 class="h reveal">Across the GTA, and beyond when you need us.</h2>
+      <ul class="cities reveal">
+        <li>Toronto</li><li>North York</li><li>Scarborough</li><li>Etobicoke</li><li>Vaughan</li><li>Markham</li><li>Richmond Hill</li><li>Mississauga</li><li>Brampton</li><li>Oakville</li><li>Pickering</li><li>Ajax</li>
+      </ul>
+      <p class="lede reveal">Based at 50 Alness St, North York.</p>
+    </div>
+    <svg class="map reveal" viewBox="0 0 500 500" aria-hidden="true">
+      <path class="ln" d="M40 380 C140 360 220 395 300 372 S430 330 470 336"/>
+      <path class="ln" d="M60 120 H460 M60 200 H460 M60 280 H460 M120 60 V440 M220 60 V440 M320 60 V440 M420 60 V440" stroke-dasharray="2 6"/>
+      <path class="rd" d="M250 230 L190 270 L120 320 M250 230 L330 220 L410 250 M250 230 L240 150 L230 90 M250 230 L300 300 M250 230 L160 210 L90 250 M250 230 L320 150 M250 230 L440 300"/>
+      <circle class="halo" cx="250" cy="230" r="10" stroke-width="1.5"/>
+      <circle class="hq" cx="250" cy="230" r="6"/><text x="262" y="226">North York</text>
+      <circle class="pt" cx="300" cy="300" r="3.5"/><text x="310" y="304">Toronto</text>
+      <circle class="pt" cx="190" cy="270" r="3.5"/><text x="120" y="290">Etobicoke</text>
+      <circle class="pt" cx="120" cy="320" r="3.5"/><text x="40" y="340">Mississauga</text>
+      <circle class="pt" cx="410" cy="250" r="3.5"/><text x="390" y="235">Scarborough</text>
+      <circle class="pt" cx="230" cy="90" r="3.5"/><text x="242" y="94">Richmond Hill</text>
+      <circle class="pt" cx="160" cy="210" r="3.5"/><text x="96" y="200">Vaughan</text>
+      <circle class="pt" cx="320" cy="150" r="3.5"/><text x="332" y="154">Markham</text>
+      <circle class="pt" cx="90" cy="250" r="3.5"/><text x="40" y="240">Brampton</text>
+      <circle class="pt" cx="440" cy="300" r="3.5"/><text x="420" y="320">Pickering</text>
+      <text x="56" y="420">Lake Ontario</text>
+    </svg>
+  </div>
+</section>
+
+<section id="faq" class="sec">
+  <div class="wrap">
+    <p class="kick mono reveal"><svg viewBox="0 0 34 20" aria-hidden="true"><path d="M1 19V1h14v18M19 19V1h14v18"/></svg>Questions</p>
+    <h2 class="h reveal">What property managers ask us first.</h2>
+    <div class="faq reveal">
+      <details><summary>Do you work with property management companies?</summary><p>Yes. Most of our work is for managers with more than one building. One account, one team, every site.</p></details>
+      <details><summary>Can you take over our existing fob system?</summary><p>Usually, yes. We'll look at what you have, tell you if it can be managed or should be replaced, and give you the price before any work starts.</p></details>
+      <details><summary>How fast can you get here?</summary><p>Building emergencies get priority. Call and we'll give you a real arrival time on the phone.</p></details>
+      <details><summary>Is the work code compliant?</summary><p>Yes. We install hardware that meets fire code and accessibility requirements, and we'll tell you if something you have doesn't.</p></details>
+      <details><summary>Do you quote before starting?</summary><p>Always. You'll know the price before we touch a door.</p></details>
+    </div>
+  </div>
+</section>
+
+<section id="request" class="sec">
+  <div class="wrap">
+    <div class="box reveal">
+      <div class="doors" aria-hidden="true"><div class="pane l"></div><div class="pane r"></div></div>
+      <div class="inner">
+        <p class="kick mono"><svg viewBox="0 0 34 20" aria-hidden="true"><path d="M1 19V1h14v18M19 19V1h14v18"/></svg>Request service</p>
+        <h2>Let us through your front door.</h2>
+        <p>Tell us about your building and we'll get back to you the same business day.</p>
+        <div class="row">
+          <a class="btn btn-primary" href="https://clienthub.getjobber.com/client_hubs/6c2a5043-8d20-4ca8-a7c5-82753914a5b7/public/work_request/new?source=social_media" target="_blank" rel="noopener">Request service</a>
+          <a class="btn btn-glass" href="tel:+16477777411">Call 647-777-7411</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <img src="assets/uts-logo.png" alt="UTS Service" width="444" height="160" loading="lazy">
+      <p>Locksmith, access control, door repair and automatic doors across Ontario.</p>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="tel:+16477777411">647-777-7411</a></li>
+        <li><a href="tel:+16476764408">647-676-4408</a></li>
+        <li><a href="mailto:Admin@utsservice.ca">Admin@utsservice.ca</a></li>
+        <li>50 Alness St, Unit 1, North York, ON M3J 2G9</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Explore</h4>
+      <ul>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#program">Building Program</a></li>
+        <li><a href="#coverage">Coverage</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </div>
+    <p class="legal">© 2026 UTS Service. All rights reserved.</p>
+  </div>
+</footer>
+
+<div class="sticky-call">
+  <a class="btn btn-primary" href="tel:+16477777411">Call now</a>
+  <a class="btn btn-glass" href="https://clienthub.getjobber.com/client_hubs/6c2a5043-8d20-4ca8-a7c5-82753914a5b7/public/work_request/new?source=social_media" target="_blank" rel="noopener">Request service</a>
+</div>
+
+<script>
+(()=>{
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const smooth=(p,e0,e1)=>{const t=clamp((p-e0)/(e1-e0),0,1);return t*t*(3-2*t)};
+const RM=matchMedia('(prefers-reduced-motion: reduce)');
+
+/* clients marquee */
+const L=[['tim-hortons','Tim Hortons'],['amazon','Amazon'],['rbc','RBC Royal Bank'],['opp','Ontario Provincial Police'],['city-of-toronto','City of Toronto'],['eaton-centre','CF Toronto Eaton Centre'],['louis-vuitton','Louis Vuitton'],['mercedes-benz','Mercedes-Benz'],['canada-post','Canada Post'],['ups','UPS'],['wework','WeWork'],['smartcentres','SmartCentres'],['dominos',"Domino's Pizza"],['pizza-pizza','Pizza Pizza'],['fred-victor','Fred Victor']];
+const cell=([f,n],hide)=>`<div class="logo-cell"${hide?' aria-hidden="true"':''}><img src="assets/clients/${f}.png" alt="${hide?'':n}" loading="lazy" width="360" height="140"></div>`;
+const half=a=>a.map(x=>cell(x)).join('')+a.map(x=>cell(x,1)).join('');
+$('#trackA').innerHTML=half(L.slice(0,8).concat(L.slice(0,8)));
+$('#trackB').innerHTML=half(L.slice(8).concat(L.slice(8)));
+
+/* split text */
+function rng(seed){let s=seed>>>0;return()=>(s=(s*1664525+1013904223)>>>0)/4294967296}
+$$('.split').forEach((el,ei)=>{
+  const txt=el.textContent.trim(), r=rng(7+ei*31), fx=el.dataset.fx;
+  const words=txt.split(' ');
+  const vis=words.map((w,i)=>{
+    const th=(i/words.length)*0.5+r()*0.04;
+    const jx=fx==='part'?(i%2?1:-1)*(24+r()*30):0;
+    return `<span class="w" style="--th:${th.toFixed(3)};--jx:${jx.toFixed(1)}px">${w}</span>`;
+  }).join(' ');
+  el.innerHTML=`<span class="visually-hidden">${txt}</span><span aria-hidden="true">${vis}</span>`;
+});
+
+/* reveals + doors */
+const io=new IntersectionObserver(es=>es.forEach(e=>{
+  if(!e.isIntersecting)return;
+  const t=e.target; t.classList.add('in');
+  if(t.classList.contains('doorway')||t.classList.contains('box')){
+    const host=t.classList.contains('box')?t:t;
+    host.classList.add('open');
+    const d=host.querySelector(':scope > .doors');
+    if(d){d.querySelector('.pane').addEventListener('transitionend',()=>d.classList.add('gone'),{once:true});setTimeout(()=>d.classList.add('gone'),2200)}
+  }
+  io.unobserve(t);
+}),{threshold:.12,rootMargin:'0px 0px -6% 0px'});
+$$('section.sec, .reveal, .box').forEach(el=>io.observe(el));
+
+/* nav state */
+const nav=$('.nav');let navSolid=null;
+const sticky=$('.sticky-call');let stickyOn=null;
+function navCheck(){const s=scrollY>innerHeight*0.6;if(s!==navSolid){navSolid=s;nav.classList.toggle('solid',s)}const o=scrollY>innerHeight*0.85;if(o!==stickyOn){stickyOn=o;sticky.classList.toggle('show',o)}}
+
+/* pause loops off-screen / hidden */
+document.addEventListener('visibilitychange',()=>document.body.classList.toggle('paused',document.hidden));
+const mio=new IntersectionObserver(es=>es.forEach(e=>e.target.classList.toggle('anim-off',!e.isIntersecting)));
+mio.observe($('#clients'));
+
+/* ---------- hero scrub ---------- */
+const hero=$('#hero'), stage=$('#stage'), video=$('#hero-video'), poster=$('#poster'), ringFill=$('#ring-fill');
+const chip=$('#chip'), chipTxt=$('#chip-txt');
+const VIDEO_URL='assets/hero-scrub.mp4', VIDEO_BYTES=5634505;
+const bands=$$('.band').map(el=>({el,a:+el.dataset.a,b:+el.dataset.b,op:-1,k:-1,live:null}));
+const GATES=['(max-width: 720px)','(orientation: portrait) and (max-width: 1024px)','(orientation: portrait) and (pointer: coarse)','(orientation: landscape) and (pointer: coarse) and (max-height: 560px)','(prefers-reduced-motion: reduce)'];
+const MQLS=GATES.map(q=>matchMedia(q));
+let scrubOn=false, inited=false, heroOnScreen=true, target=0, shown=0, rafId=null, lastTick=0, loadK=0, loadStart=0, chipOn=null;
+let seekBusy=false, pendingTime=null;
+
+function heroProgress(){const r=hero.getBoundingClientRect();const span=hero.offsetHeight-innerHeight;return span>0?clamp(-r.top/span,0,1):0}
+function requestSeek(t){if(!video.duration||!isFinite(t))return;if(seekBusy){pendingTime=t;return}seekBusy=true;video.currentTime=Math.min(t,video.duration-0.04)}
+video.addEventListener('seeked',()=>{seekBusy=false;if(pendingTime!==null){const t=pendingTime;pendingTime=null;requestSeek(t)}});
+video.addEventListener('error',()=>{seekBusy=false;pendingTime=null;failVideo()});
+
+function updateCaptions(p){
+  bands.forEach((B,i)=>{
+    const f=0.045, last=i===bands.length-1, first=i===0;
+    let op=(first?1:smooth(p,B.a,B.a+f))*(last?1:1-smooth(p,B.b-f,B.b));
+    if(p<B.a-0.001&&!first)op=0;
+    let k=clamp((p-B.a)/0.07,0,1);
+    if(first)k=Math.max(k,loadK);
+    op=Math.round(op*1000)/1000;
+    if(Math.abs(op-B.op)>0.004||(op===0)!==(B.op===0)){B.op=op;B.el.style.opacity=op}
+    if(Math.abs(k-B.k)>0.008||(k===1&&B.k!==1)){B.k=k;B.el.style.setProperty('--k',k.toFixed(3))}
+    const live=op>0.5;if(live!==B.live){B.live=live;B.el.classList.toggle('live',live)}
+  });
+  const on=p>0.43;
+  if(on!==chipOn){chipOn=on;chip.classList.toggle('on',on);chipTxt.textContent=on?'Entrance 01 · Access granted':'Entrance 01 · Standby'}
+}
+function tick(now){
+  const dt=Math.min(100,now-(lastTick||now));lastTick=now;
+  shown+=(target-shown)*(1-Math.pow(1-0.16,dt/16.667));
+  let busy=Math.abs(target-shown)>=0.0005;
+  if(!busy)shown=target;
+  if(loadK<1){loadK=clamp((now-loadStart)/1300,0,1);loadK=1-Math.pow(1-loadK,3);busy=true}
+  requestSeek(shown*(video.duration||0));
+  updateCaptions(shown);
+  if(busy&&scrubOn)rafId=requestAnimationFrame(tick);else{rafId=null;lastTick=0}
+}
+function kick(){if(rafId===null&&heroOnScreen&&scrubOn)rafId=requestAnimationFrame(tick)}
+function onScroll(){target=heroProgress();kick()}
+
+let started=false;
+function initHeroOnce(){
+  if(inited)return;inited=true;
+  poster.style.backgroundImage="url('assets/hero-poster.jpg')";
+  const img=new Image();img.onload=startBlobFetch;img.onerror=startBlobFetch;img.src='assets/hero-poster.jpg';
+  setTimeout(startBlobFetch,4000);
+}
+function startBlobFetch(){if(started)return;started=true;loadHeroBlob().catch(failVideo)}
+async function loadHeroBlob(){
+  const ctrl=new AbortController();let wd=setTimeout(()=>ctrl.abort(),20000);
+  const res=await fetch(VIDEO_URL,{priority:'low',signal:ctrl.signal});
+  if(!res.ok||!res.body)throw new Error('video');
+  const total=Number(res.headers.get('Content-Length'))||VIDEO_BYTES;
+  const reader=res.body.getReader();const chunks=[];let got=0,last=0;
+  for(;;){
+    const {done,value}=await reader.read();if(done)break;
+    clearTimeout(wd);wd=setTimeout(()=>ctrl.abort(),20000);
+    chunks.push(value);got+=value.length;
+    const fr=Math.min(1,got/total),now=performance.now();
+    if(now-last>100||fr===1){last=now;ringFill.style.setProperty('--ld',Math.round(126*(1-fr)))}
+  }
+  clearTimeout(wd);ringFill.style.setProperty('--ld',0);
+  video.src=URL.createObjectURL(new Blob(chunks,{type:'video/mp4'}));video.load();
+  video.addEventListener('canplay',()=>{requestSeek(heroProgress()*video.duration);stage.classList.add('video-ready');kick()},{once:true});
+}
+function failVideo(){stage.classList.add('video-failed')}
+
+function enableScrub(){
+  if(scrubOn)return;scrubOn=true;
+  initHeroOnce();
+  addEventListener('scroll',onScroll,{passive:true});
+  bands.forEach(b=>{b.op=-1;b.k=-1;b.live=null});chipOn=null;
+  if(!loadStart)loadStart=performance.now();
+  target=shown=heroProgress();updateCaptions(shown);onScroll();
+}
+function disableScrub(){
+  if(!scrubOn)return;scrubOn=false;
+  removeEventListener('scroll',onScroll);
+  if(rafId!==null){cancelAnimationFrame(rafId);rafId=null}
+}
+function applyHeroMode(){if(MQLS.some(m=>m.matches))disableScrub();else enableScrub()}
+MQLS.forEach(m=>m.addEventListener('change',applyHeroMode));
+new IntersectionObserver(es=>{heroOnScreen=es[0].isIntersecting;if(heroOnScreen)kick()}).observe(hero);
+applyHeroMode();
+addEventListener('scroll',navCheck,{passive:true});navCheck();
+
+/* ---------- fob hold interaction ---------- */
+const zone=$('#fobzone'), rd=$('#reader'), lbl=$('#hold-label');
+let h=0, holding=false, granted=false, hraf=null, hlast=0;
+function setH(v){h=v;zone.style.setProperty('--h',v.toFixed(3))}
+function hstep(now){
+  const dt=Math.min(64,now-(hlast||now));hlast=now;
+  if(holding)setH(Math.min(1,h+dt/1400));else setH(Math.max(0,h-dt/700*(0.4+h)));
+  if(h>=1&&!granted){grant();return}
+  if(holding||h>0)hraf=requestAnimationFrame(hstep);else{hraf=null;hlast=0}
+}
+function grant(){granted=true;holding=false;hraf=null;setH(1);zone.classList.add('granted');lbl.textContent='Access granted';rd.setAttribute('aria-label','Access granted')}
+function start(e){if(granted)return;if(e)e.preventDefault();holding=true;if(!hraf)hraf=requestAnimationFrame(hstep)}
+function stop(){holding=false}
+rd.addEventListener('pointerdown',e=>{rd.setPointerCapture?.(e.pointerId);start(e)});
+['pointerup','pointercancel','lostpointercapture'].forEach(t=>rd.addEventListener(t,stop));
+rd.addEventListener('keydown',e=>{if((e.key===' '||e.key==='Enter')&&!e.repeat)start(e)});
+rd.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter')stop()});
+rd.addEventListener('contextmenu',e=>e.preventDefault());
+
+/* reduced motion, live both ways */
+function pinToFinalStates(){if(!granted)grant();$$('.doorway,.box').forEach(d=>{d.classList.add('open','in')});$$('.reveal').forEach(r=>r.classList.add('in'))}
+function unpinFinalStates(){/* content stays revealed; scroll-driven hero re-arms through applyHeroMode */}
+if(RM.matches)pinToFinalStates();
+RM.addEventListener('change',e=>{if(e.matches)pinToFinalStates();else{unpinFinalStates();applyHeroMode()}});
+})();
+</script>
+</body>
+</html>
