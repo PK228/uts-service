@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://pk228.github.io/uts-service/sitemap.xml
