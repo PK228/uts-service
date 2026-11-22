@@ -1,0 +1,15 @@
+<form class="planner" id="planner" aria-label="Plan a walkthrough" onsubmit="return false">
+        <p class="mono ptitle">Plan a walkthrough</p>
+        <fieldset><legend>Your building</legend><div class="chips" data-key="building" data-mode="one">
+          <button type="button" class="chipb" aria-pressed="false">Apartment or condo</button><button type="button" class="chipb" aria-pressed="false">Retail or franchise</button><button type="button" class="chipb" aria-pressed="false">Office</button><button type="button" class="chipb" aria-pressed="false">Public building</button><button type="button" class="chipb" aria-pressed="false">Something else</button>
+        </div></fieldset>
+        <fieldset><legend>Doors and entrances</legend><div class="chips" data-key="doors" data-mode="one">
+          <button type="button" class="chipb" aria-pressed="false">1 to 5</button><button type="button" class="chipb" aria-pressed="false">6 to 20</button><button type="button" class="chipb" aria-pressed="false">21 to 50</button><button type="button" class="chipb" aria-pressed="false">More than 50</button>
+        </div></fieldset>
+        <fieldset><legend>What you need (pick any)</legend><div class="chips" data-key="needs" data-mode="many">
+          <button type="button" class="chipb" aria-pressed="false">Locks and rekeys</button><button type="button" class="chipb" aria-pressed="false">Fobs and access control</button><button type="button" class="chipb" aria-pressed="false">Door repair</button><button type="button" class="chipb" aria-pressed="false">Automatic doors</button><button type="button" class="chipb" aria-pressed="false">Regular maintenance</button>
+        </div></fieldset>
+        <div class="ticket mono empty" id="ticket" aria-live="polite">Tap a few options and your request writes itself here.</div>
+        <div class="row"><a class="btn btn-primary" id="p-mail" href="mailto:Admin@utsservice.ca" aria-disabled="true">Email this to UTS</a><button type="button" class="btn btn-glass" id="p-copy" aria-disabled="true">Copy</button></div>
+        <p class="pnote">Opens your email app with the details filled in. Nothing is sent until you hit send.</p>
+      </form>
