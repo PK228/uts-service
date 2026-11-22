@@ -30,4 +30,4 @@ UTS Service works for property managers, condo boards, retail and franchise oper
 - [About](https://uts-service-nu.vercel.app/about/)
 - [FAQ](https://uts-service-nu.vercel.app/faq/)
 - [Contact](https://uts-service-nu.vercel.app/contact/)
-- [Request service form](https://clienthub.getjobber.com/client_hubs/6c2a5043-8d20-4ca8-a7c5-82753914a5b7/public/work_request/new?source=social_media)
+- [Request service](https://uts-service-nu.vercel.app/contact/#request)
