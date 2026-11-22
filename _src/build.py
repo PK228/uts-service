@@ -315,7 +315,7 @@ def linkrow(rel, kicker, h2, links):
     return f'<section class="psec"><div class="wrap"><p class="kick mono reveal">{KICK}{e(kicker)}</p><h2 class="h reveal">{e(h2)}</h2><div class="lgrid">{c}</div></div></section>'
 
 def cta(rel, h2='Let us through your front door.', p="Tell us about your building and we'll get back to you the same business day."):
-    return f'''<section class="psec" id="request"><div class="wrap"><div class="em reveal"><p class="kick mono in">{KICK}Request service</p><h2>{e(h2)}</h2><p>{e(p)}</p><div class="row"><a class="btn btn-primary" href="{JOBBER}" target="_blank" rel="noopener">Request service</a><a class="btn btn-glass" href="{rel}contact/">Plan a walkthrough</a><a class="big-call" href="tel:{PHONE_TEL}">{PHONE}</a></div></div></div></section>'''
+    return f'''<section class="psec" id="request"><div class="wrap"><div class="em reveal"><p class="kick mono in">{KICK}Request service</p><h2>{e(h2)}</h2><p>{e(p)}</p><div class="row"><a class="btn btn-primary" href="{JOBBER}" target="_blank" rel="noopener">Request service</a><a class="btn btn-glass" href="{rel}contact/">Contact details</a><a class="big-call" href="tel:{PHONE_TEL}">{PHONE}</a></div></div></div></section>'''
 
 def pic(rel, s):
     return f'<figure class="pfig reveal"><picture><source type="image/webp" srcset="{rel}assets/{s["img"]}.webp"><img src="{rel}assets/{s["img"]}.jpg" alt="{e(s["alt"])}" loading="lazy" width="1600" height="1200"></picture></figure>'
@@ -504,8 +504,8 @@ def build():
       {planner}
     </div></section>'''
     shell(p, 'Contact UTS Service | Request Locksmith or Door Service',
-          'Call 647-777-7411, email Admin@utsservice.ca or plan a walkthrough online. UTS Service, 50 Alness St, Unit 1, North York, ON.',
-          hero(rel, T, 'Contact', 'Let us through your front door.', "Three taps and we know what to bring. We'll get back to you the same business day.", img='hero-ending.jpg') + main(contact, faq([GENERAL_FAQS[6], GENERAL_FAQS[2], GENERAL_FAQS[3]], 'Before you reach out')),
+          'Call 647-777-7411, email Admin@utsservice.ca or send a service request online. UTS Service, 50 Alness St, Unit 1, North York, ON.',
+          hero(rel, T, 'Contact', 'Let us through your front door.', "One short form and we'll get back to you the same business day.", img='hero-ending.jpg') + main(contact, faq([GENERAL_FAQS[6], GENERAL_FAQS[2], GENERAL_FAQS[3]], 'Before you reach out')),
           [crumbs_ld(T), {"@type": "ContactPage", "url": BASE + '/' + p, "about": {"@id": BASE + "/#business"}}, faq_ld([GENERAL_FAQS[6], GENERAL_FAQS[2], GENERAL_FAQS[3]])])
 
     # ---- 404 ----
